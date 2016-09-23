@@ -38,6 +38,10 @@ def check_db_connections(cursor, dbname, pmin, pmax):
     return (c, ratio)
 
 
+def get_pool_size(username, password):
+    return 42
+
+
 def main():
     config = configparser.SafeConfigParser()
     config.read('alfgard.ini')
@@ -49,7 +53,10 @@ def main():
         pmin = config['db']['poolmin']
         pmax = config['db']['poolmax']
         (c, ratio) = check_db_connections(cursor, dbname, pmin, pmax)
-        db_stream.write("%s;%s;%s;%.1f\n" % (pmin, c, pmax, ratio))
+        pool = get_pool_size(config['jmx']['user'], config['jmx']['password'])
+        relation = c - pool
+        db_stream.write("%s;%s;%s;%.1f;%s;%s\n" % (pmin, c, pmax, ratio, pool,
+                                                   relation))
         db_stream.flush()
         sleep(2)
 
