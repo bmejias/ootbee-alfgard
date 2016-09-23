@@ -1,0 +1,3 @@
+Idea from Angel:
+
+- Monitor for how long queries are running.
