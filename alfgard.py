@@ -33,17 +33,19 @@ def count_db_connections(cursor, dbname):
 def check_db_connections(cursor, dbname, pmin, pmax):
     c = count_db_connections(cursor, dbname)
     ratio = 100.0 * c / float(pmax)
-    print("Min\tCur\tMax\t%")
-    print("%s\t%s\t%s\t%.1f" % (pmin, pmax, c, ratio))
+    return (c, ratio)
 
 
 def main():
     config = configparser.SafeConfigParser()
     config.read('alfgard.ini')
     cursor = connect_to_db(config)
-    check_db_connections(cursor, config['db']['name'],
-                         config['db']['poolmin'], config['db']['poolmax'])
 
+    pmin = config['db']['poolmin']
+    pmax = config['db']['poolmax']
+    (c, ratio) = check_db_connections(cursor, config['db']['name'], pmin, pmax)
+    print("Min\tCur\tMax\t%")
+    print("%s\t%s\t%s\t%.1f" % (pmin, pmax, c, ratio))
 
 if __name__ == '__main__':
     main()
