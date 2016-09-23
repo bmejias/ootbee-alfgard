@@ -23,14 +23,18 @@ def connect_to_db(config):
         sys.exit(1)
 
 
+def count_connections(cursor, dbname):
+    cursor.execute(
+        """SELECT count(*) FROM pg_stat_activity WHERE datname=%s
+            AND pid <> pg_backend_pid()""", (dbname,))
+    return cursor.fetchone()[0]
+
+
 def main():
     config = configparser.SafeConfigParser()
-    print(config)
     config.read('alfgard.ini')
     cursor = connect_to_db(config)
-    cursor.execute('select version();')
-    print(cursor.fetchall())
-    print(sys.argv[0])
+    print(count_connections(cursor, config['db']['name']))
 
 
 if __name__ == '__main__':
