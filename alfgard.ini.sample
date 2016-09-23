@@ -2,6 +2,7 @@
 check = true
 port = 5432
 host = localhost
+name = alfresco
 username = alfresco
 password = verysecret
 poolmax = 175
