@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+from time import sleep
+import io
 import sys
 import psycopg2
 
@@ -41,11 +43,17 @@ def main():
     config.read('alfgard.ini')
     cursor = connect_to_db(config)
 
-    pmin = config['db']['poolmin']
-    pmax = config['db']['poolmax']
-    (c, ratio) = check_db_connections(cursor, config['db']['name'], pmin, pmax)
-    print("Min\tCur\tMax\t%")
-    print("%s\t%s\t%s\t%.1f" % (pmin, pmax, c, ratio))
+    db_stream = io.open(config['output']['db'], 'w')
+    while True:
+        dbname = config['db']['name']
+        pmin = config['db']['poolmin']
+        pmax = config['db']['poolmax']
+        (c, ratio) = check_db_connections(cursor, dbname, pmin, pmax)
+        db_stream.write("%s;%s;%s;%.1f\n" % (pmin, c, pmax, ratio))
+        db_stream.flush()
+        sleep(2)
+
+    db_stream.close()
 
 if __name__ == '__main__':
     main()
