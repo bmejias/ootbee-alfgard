@@ -23,18 +23,26 @@ def connect_to_db(config):
         sys.exit(1)
 
 
-def count_connections(cursor, dbname):
+def count_db_connections(cursor, dbname):
     cursor.execute(
         """SELECT count(*) FROM pg_stat_activity WHERE datname=%s
             AND pid <> pg_backend_pid()""", (dbname,))
     return cursor.fetchone()[0]
 
 
+def check_db_connections(cursor, dbname, pmin, pmax):
+    c = count_db_connections(cursor, dbname)
+    ratio = 100.0 * c / float(pmax)
+    print("Min\tCur\tMax\t%")
+    print("%s\t%s\t%s\t%.1f" % (pmin, pmax, c, ratio))
+
+
 def main():
     config = configparser.SafeConfigParser()
     config.read('alfgard.ini')
     cursor = connect_to_db(config)
-    print(count_connections(cursor, config['db']['name']))
+    check_db_connections(cursor, config['db']['name'],
+                         config['db']['poolmin'], config['db']['poolmax'])
 
 
 if __name__ == '__main__':
