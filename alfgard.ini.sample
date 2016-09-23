@@ -1,0 +1,20 @@
+[db]
+check = true
+port = 5432
+host = localhost
+username = alfresco
+password = verysecret
+poolmax = 175
+poolmin = 10
+
+[tomcat]
+check = true
+maxthreads = 100
+
+[jmx]
+host = localhost
+port = 50500
+user = monitorRole
+password = change_asap
+java = /opt/alfresco/java/bin/java
+jmxterm = jmxterm.jar
