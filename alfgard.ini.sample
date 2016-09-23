@@ -19,3 +19,7 @@ user = monitorRole
 password = change_asap
 java = /opt/alfresco/java/bin/java
 jmxterm = jmxterm.jar
+
+[output]
+db = db_status.log
+tomcat = tomcatpool.log
