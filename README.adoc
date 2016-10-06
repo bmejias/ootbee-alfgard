@@ -1,0 +1,24 @@
+== Alfresco health checker guardian
+
+This project started during the Alfresco Global Hackathon of the 23rd of
+September, 2016.
+
+=== Description
+
+We want to build a daemon that is constantly monitoring certain values than can
+help us to identify potential risks (unhealthy status). When values reach
+predefined thresholds, the daemon takes action. Things we want to monitor are
+the following:
+
+- Database connection pool size (and status of connections)
+
+- Tomcat thread pool size 
+
+- Status of libreoffice converter (is it running? listening?)
+
+- Amount of connected users
+
+*Practical info*: I'm writing the daemon in Python and it will run on Linux. I
+can retrieve some data from Alfresco through the jmx-rmi connector, but this
+works only for Enterprise Edition. I need help to retrieve that information in
+Community Edition, hopefully in the form of webscripts.
