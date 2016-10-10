@@ -66,7 +66,7 @@ def get_pool_size(config):
 
 def main():
     config = configparser.SafeConfigParser()
-    config.read('alfgard.ini')
+    config.read('../etc/alfgard.ini')
     cursor = connect_to_db(config)
 
     db_stream = io.open(config['output']['db'], 'w')
