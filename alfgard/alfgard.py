@@ -39,28 +39,34 @@ def check_db_connections(cursor, dbname, pmin, pmax):
     return (c, ratio)
 
 
-def get_pool_size(config):
-    bean = "Alfresco:Name=ConnectionPool"
-    props = "NumActive NumIdle"
+def jmx_call(config, bean, op, props):
+    props = (props,) if type(props) is str else props  # props always a tuple
     host = config['jmx']['host']
     port = config['jmx']['port']
     url = "service:jmx:rmi:///jndi/rmi://%s:%s/alfresco/jmxrmi" % (host, port)
-
     jmx_vars = {'java': config['jmx']['java'],
                 'jmxterm': config['jmx']['jmxterm'],
                 'url': url,
                 'user': config['jmx']['user'],
                 'password': config['jmx']['password']}
-    get_values = 'echo "get -s -b %s %s"' % (bean, props)
+    get_values = 'echo "%s -s -b %s %s"' % (op, bean, " ".join(props))
     jmx_call = "%(java)s -jar %(jmxterm)s" % jmx_vars
     jmx_call += " -l %(url)s" % jmx_vars
     jmx_call += " -u %(user)s -p %(password)s -v silent -n" % jmx_vars
     call = '%s | %s' % (get_values, jmx_call)
     p = subprocess.Popen(call, shell=True, stdout=subprocess.PIPE).stdout.read()
     result = p.decode('UTF-8')
-    values = result.split('\n')
-    active = int(values[0])
-    idle = int(values[1])
+    return tuple(result.split('\n'))
+
+
+def get_pool_size(config):
+    bean = "Alfresco:Name=ConnectionPool"
+    op = "get"
+    props = ("NumActive", "NumIdle")
+
+    result = jmx_call(config, bean, op, props)
+    active = int(result[0])
+    idle = int(result[1])
     return (active, idle, active + idle)
 
 
