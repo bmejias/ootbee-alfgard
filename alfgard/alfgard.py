@@ -56,10 +56,10 @@ def jmx_call(config, bean, op, props):
     call = '%s | %s' % (get_values, jmx_call)
     p = subprocess.Popen(call, shell=True, stdout=subprocess.PIPE).stdout.read()
     result = p.decode('UTF-8')
-    return tuple(result.split('\n'))
+    return tuple(x for x in result.split('\n') if x is not '')
 
 
-def get_pool_size(config):
+def get_db_pool_size(config):
     bean = "Alfresco:Name=ConnectionPool"
     op = "get"
     props = ("NumActive", "NumIdle")
@@ -68,6 +68,17 @@ def get_pool_size(config):
     active = int(result[0])
     idle = int(result[1])
     return (active, idle, active + idle)
+
+
+def get_tomcat_threadpool(config):
+    bean = "Catalina:name=tomcatThreadPool,type=Executor"
+    op = "get"
+    props = ("corePoolSize", "poolSize", "largestPoolSize",
+             "activeCount", "queueSize")
+
+    result = jmx_call(config, bean, op, props)
+    print(result)
+    return tuple(int(i) for i in result)
 
 
 def main():
@@ -83,13 +94,15 @@ def main():
         pmin = config['db']['poolmin']
         pmax = config['db']['poolmax']
         (c, ratio) = check_db_connections(cursor, dbname, pmin, pmax)
-        (active, idle, pool) = get_pool_size(config)
+        (active, idle, pool) = get_db_pool_size(config)
         relation = c - pool
         db_stream.write("%s\t%s\t%s\t%.1f\t%s\t%s\t%s\t%s\n" % (pmin, c, pmax,
                                                                 ratio, active,
                                                                 idle, pool,
                                                                 relation))
         db_stream.flush()
+        t = get_tomcat_threadpool(config)
+        print("%s\t%s\t%s\t%s\t%s" % t)
         sleep(2)
 
     db_stream.close()
