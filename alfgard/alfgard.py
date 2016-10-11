@@ -85,7 +85,7 @@ def main():
     config.read('../etc/alfgard.ini')
     cursor = connect_to_db(config)
 
-    db_stream = open(config['output']['db'], 'w')
+    db_stream = open('%s.out' % config['db']['outputname'], 'w')
     db_stream.write("MIN\tCURR\tMAX\t%\tACT\tIDLE\tPOOL\tDIFF\n")
     db_stream.flush()
     while True:

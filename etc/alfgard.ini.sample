@@ -1,5 +1,7 @@
 [db]
 check = true
+output = csv,out
+outputname = db_cnxpool
 port = 5432
 host = localhost
 name = alfresco
@@ -10,6 +12,8 @@ poolmin = 10
 
 [tomcat]
 check = true
+output = csv,out
+outputname = tomcat_threadpool
 maxthreads = 100
 
 [jmx]
@@ -19,7 +23,3 @@ user = monitorRole
 password = change_asap
 java = /opt/alfresco/java/bin/java
 jmxterm = jmxterm.jar
-
-[output]
-db = db_status.log
-tomcat = tomcatpool.log
