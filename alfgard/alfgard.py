@@ -118,10 +118,12 @@ def monitor_tomcat_threadpool(config):
     sys.exit(0)
 
 
-def monitor(procedure, config):
+def monitor(procedure, config, pids):
     thefork = os.fork()
     if thefork is 0:
         procedure(config)
+    else:
+        pids.write("%s\n" % thefork)
 
 
 def main():
@@ -130,11 +132,19 @@ def main():
 
     cmd = 'error' if len(sys.argv) is 1 else sys.argv[1]
     if cmd == 'start':
+        # TODO: check if the file already exist
+        pids = open('../var/alfgard.pid', 'w')
         if config['db']['check'] == 'true':
-            monitor(monitor_db_cnxpool, config)
-
+            monitor(monitor_db_cnxpool, config, pids)
         if config['tomcat']['check'] == 'true':
-            monitor(monitor_tomcat_threadpool, config)
+            monitor(monitor_tomcat_threadpool, config, pids)
+        pids.close()
+    if cmd == 'stop':
+        pids = open('../var/alfgard.pid', 'r')
+        for line in pids:
+            pid = int(line.strip())
+            os.kill(pid, 9)
+        pids.close()  # TODO should remove pids file after close
     elif cmd == 'help':
         print_help(0)
     else:
