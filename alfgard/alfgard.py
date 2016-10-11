@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 
 from time import sleep
-import io
+from subprocess import Popen, PIPE
 import psycopg2
-import subprocess
 import sys
 
 try:
@@ -54,7 +53,7 @@ def jmx_call(config, bean, op, props):
     jmx_call += " -l %(url)s" % jmx_vars
     jmx_call += " -u %(user)s -p %(password)s -v silent -n" % jmx_vars
     call = '%s | %s' % (get_values, jmx_call)
-    p = subprocess.Popen(call, shell=True, stdout=subprocess.PIPE).stdout.read()
+    p = Popen(call, shell=True, stdout=PIPE).stdout.read()
     result = p.decode('UTF-8')
     return tuple(x for x in result.split('\n') if x is not '')
 
@@ -86,7 +85,7 @@ def main():
     config.read('../etc/alfgard.ini')
     cursor = connect_to_db(config)
 
-    db_stream = io.open(config['output']['db'], 'w')
+    db_stream = open(config['output']['db'], 'w')
     db_stream.write("MIN\tCURR\tMAX\t%\tACT\tIDLE\tPOOL\tDIFF\n")
     db_stream.flush()
     while True:
