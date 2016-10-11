@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 
-from time import sleep
 from subprocess import Popen, PIPE
+from time import sleep
+import os
 import psycopg2
 import sys
 
@@ -80,9 +81,34 @@ def get_tomcat_threadpool(config):
     return tuple(int(i) for i in result)
 
 
+def monitor_db_cnxpool(config):
+    print("monitoring db on %s" % os.getpid())
+    sys.exit(0)
+
+
+def monitor_tomcat_threadpool(config):
+    print("monitoring tomcat on %s" % os.getpid())
+    sys.exit(0)
+
+
+def monitor(procedure, config):
+    print("parent %s will call fork" % os.getpid())
+    thefork = os.fork()
+    if thefork is 0:
+        procedure(config)
+
+
 def main():
     config = configparser.SafeConfigParser()
     config.read('../etc/alfgard.ini')
+
+    print("going to check at parent %s" % os.getpid())
+    if config['db']['check'] == 'true':
+        monitor(monitor_db_cnxpool, config)
+
+    if config['tomcat']['check'] == 'true':
+        monitor(monitor_tomcat_threadpool, config)
+
     cursor = connect_to_db(config)
 
     db_stream = open('%s.out' % config['db']['outputname'], 'w')
