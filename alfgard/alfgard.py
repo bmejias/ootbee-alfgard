@@ -12,6 +12,12 @@ except ImportError:
     import ConfigParser as configparser
 
 
+def print_help(exit_status):
+    print("Usage: ./alfgard.py {start|stop}")
+    print("Configuration on ../etc/alfgard.ini")
+    sys.exit(exit_status)
+
+
 def connect_to_db(config):
     try:
         conn = psycopg2.connect(host=config['db']['host'],
@@ -101,7 +107,6 @@ def monitor_db_cnxpool(config):
         sleep(2)
 
     db_stream.close()
-    # print("monitoring db on %s" % os.getpid())
     sys.exit(0)
 
 
@@ -110,12 +115,10 @@ def monitor_tomcat_threadpool(config):
         t = get_tomcat_threadpool(config)
         print("%s\t%s\t%s\t%s\t%s" % t)
         sleep(2)
-    # print("monitoring tomcat on %s" % os.getpid())
     sys.exit(0)
 
 
 def monitor(procedure, config):
-    print("parent %s will call fork" % os.getpid())
     thefork = os.fork()
     if thefork is 0:
         procedure(config)
@@ -125,12 +128,17 @@ def main():
     config = configparser.SafeConfigParser()
     config.read('../etc/alfgard.ini')
 
-    # print("going to check at parent %s" % os.getpid())
-    if config['db']['check'] == 'true':
-        monitor(monitor_db_cnxpool, config)
+    cmd = 'error' if len(sys.argv) is 1 else sys.argv[1]
+    if cmd == 'start':
+        if config['db']['check'] == 'true':
+            monitor(monitor_db_cnxpool, config)
 
-    if config['tomcat']['check'] == 'true':
-        monitor(monitor_tomcat_threadpool, config)
+        if config['tomcat']['check'] == 'true':
+            monitor(monitor_tomcat_threadpool, config)
+    elif cmd == 'help':
+        print_help(0)
+    else:
+        print_help(1)
 
 
 if __name__ == '__main__':
