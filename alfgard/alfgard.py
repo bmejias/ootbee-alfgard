@@ -19,6 +19,40 @@ def print_help(exit_status):
     sys.exit(exit_status)
 
 
+class Logger(object):
+
+    logs = {}
+
+    def __tocsv(self, log, *args):
+        line = ';'.join([str(a) for a in args])
+        log.write('%s\n' % line)
+
+    def __totabs(self, log, *args):
+        line = '\t'.join([str(a) for a in args])
+        log.write('%s\n' % line)
+
+    def __init__(self, config, key):
+        output_name = config[key]['outputname']
+        stream_types = config[key]['output']
+        for stream_type in stream_types.split(','):
+            if stream_type == 'csv':
+                writer = self.__tocsv
+            elif stream_type == 'out':
+                writer = self.__totabs
+            log = open('../log/%s.%s' % (output_name, stream_type), 'w')
+            self.logs[stream_type] = {'file': log, 'write': writer}
+
+    def write(self, *args):
+        for log in self.logs:
+            logfile = self.logs[log]['file']
+            self.logs[log]['write'](logfile, *args)
+            logfile.flush()
+
+    def close(self):
+        for log in self.logs:
+            self.logs[log]['file'].close()
+
+
 def connect_to_db(config):
     try:
         conn = psycopg2.connect(host=config['db']['host'],
@@ -84,7 +118,6 @@ def get_tomcat_threadpool(config):
              "activeCount", "queueSize")
 
     result = jmx_call(config, bean, op, props)
-    print(result)
     return tuple(int(i) for i in result)
 
 
@@ -112,10 +145,12 @@ def monitor_db_cnxpool(config):
 
 
 def monitor_tomcat_threadpool(config):
+    logger = Logger(config, 'tomcat')
     while True:
         t = get_tomcat_threadpool(config)
-        print("%s\t%s\t%s\t%s\t%s" % t)
+        logger.write(*t)
         sleep(2)
+    logger.close()
     sys.exit(0)
 
 
