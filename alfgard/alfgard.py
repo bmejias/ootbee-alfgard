@@ -123,29 +123,26 @@ def get_tomcat_threadpool(config):
 
 def monitor_db_cnxpool(config):
     cursor = connect_to_db(config)
-    db_stream = open('%s.out' % config['db']['outputname'], 'w')
-    db_stream.write("MIN\tCURR\tMAX\t%\tACT\tIDLE\tPOOL\tDIFF\n")
-    db_stream.flush()
+    logger = Logger(config, 'db')
+    logger.write('MIN', 'CURR', 'MAX', '%', 'ACT', 'IDLE', 'POOL', 'DIFF')
     while True:
         dbname = config['db']['name']
         pmin = config['db']['poolmin']
         pmax = config['db']['poolmax']
-        (c, ratio) = check_db_connections(cursor, dbname, pmin, pmax)
+        (c, r) = check_db_connections(cursor, dbname, pmin, pmax)
         (active, idle, pool) = get_db_pool_size(config)
-        relation = c - pool
-        db_stream.write("%s\t%s\t%s\t%.1f\t%s\t%s\t%s\t%s\n" % (pmin, c, pmax,
-                                                                ratio, active,
-                                                                idle, pool,
-                                                                relation))
-        db_stream.flush()
+        diff = c - pool
+        ratio = "%.1f" % r
+        logger.write(pmin, c, pmax, ratio, active, idle, pool, diff)
         sleep(2)
 
-    db_stream.close()
+    logger.close()
     sys.exit(0)
 
 
 def monitor_tomcat_threadpool(config):
     logger = Logger(config, 'tomcat')
+    logger.write('CORESZ', 'POOLSZ', 'LARGEST', 'ACTIVE', 'QUEUE')
     while True:
         t = get_tomcat_threadpool(config)
         logger.write(*t)
