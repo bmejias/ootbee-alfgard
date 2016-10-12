@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 from time import sleep
 import os
 import psycopg2
+import signal
 import sys
 
 try:
@@ -139,12 +140,13 @@ def main():
         if config['tomcat']['check'] == 'true':
             monitor(monitor_tomcat_threadpool, config, pids)
         pids.close()
-    if cmd == 'stop':
+    elif cmd == 'stop':
         pids = open('../var/alfgard.pid', 'r')
         for line in pids:
             pid = int(line.strip())
-            os.kill(pid, 9)
-        pids.close()  # TODO should remove pids file after close
+            # TODO: what if pids are already dead?
+            os.kill(pid, signal.SIGTERM)
+        pids.close()  # TODO: should remove pids file after close
     elif cmd == 'help':
         print_help(0)
     else:
